@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alytics — AI Analytics</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<!-- ─── Top Nav ─────────────────────────────────────────── -->
+<nav class="topnav">
+  <div class="nav-left">
+    <div class="logo">Alytics</div>
+    <select id="siteSelect" style="min-width:160px;"></select>
+    <select id="periodSelect">
+      <option value="1d">Last 24h</option>
+      <option value="7d" selected>Last 7 days</option>
+      <option value="30d">Last 30 days</option>
+      <option value="90d">Last 90 days</option>
+    </select>
+  </div>
+  <div class="nav-right">
+    <div class="realtime-dot" id="realtimeBadge">0 online</div>
+    <button class="btn btn-sm" id="addSiteBtn">+ Add Site</button>
+  </div>
+</nav>
+
+<!-- ─── Main Dashboard ──────────────────────────────────── -->
+<main id="dashboard">
+
+  <!-- Overview Cards -->
+  <div class="overview-cards">
+    <div class="card">
+      <div class="card-label">Unique Visitors</div>
+      <div class="card-value" id="statVisitors">—</div>
+      <div class="card-change" id="statVisitorChange"></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Total Pageviews</div>
+      <div class="card-value" id="statPageviews">—</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Sessions</div>
+      <div class="card-value" id="statSessions">—</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Bounce Rate</div>
+      <div class="card-value" id="statBounce">—</div>
+    </div>
+  </div>
+
+  <!-- Time Series Chart -->
+  <div class="chart-section">
+    <div class="section-header">
+      <div class="section-title">Traffic Over Time</div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#6366f1"></div> Visitors</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#22d3ee"></div> Pageviews</div>
+      </div>
+    </div>
+    <canvas id="trafficChart" height="80"></canvas>
+  </div>
+
+  <!-- Data Tables -->
+  <div class="data-grid">
+
+    <!-- Top Pages -->
+    <div class="panel">
+      <div class="section-header">
+        <div class="section-title">Top Pages</div>
+      </div>
+      <table class="panel-table" id="pagesTable">
+        <thead><tr><th>Page</th><th>Visitors</th><th>Views</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Top Sources -->
+    <div class="panel">
+      <div class="section-header">
+        <div class="section-title">Top Sources</div>
+      </div>
+      <table class="panel-table" id="sourcesTable">
+        <thead><tr><th>Source</th><th>Visitors</th><th>Views</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Devices -->
+    <div class="panel">
+      <div class="section-header">
+        <div class="section-title">Devices</div>
+      </div>
+      <div class="device-grid" id="devicesPanel"></div>
+    </div>
+
+    <!-- Browsers -->
+    <div class="panel">
+      <div class="section-header">
+        <div class="section-title">Browsers & OS</div>
+      </div>
+      <div class="device-grid" id="browsersPanel"></div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ─── Chat FAB ─────────────────────────────────────────── -->
+<button class="chat-fab" id="chatFab">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+  Ask AI
+</button>
+
+<!-- ─── Chat Drawer ───────────────────────────────────────── -->
+<div class="chat-drawer" id="chatDrawer">
+  <div class="chat-drawer-header">
+    <div class="chat-drawer-title">
+      Chat with your data
+      <span>AI-powered</span>
+    </div>
+    <button class="chat-close" id="chatClose" title="Close">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="chat-messages" id="chatMessages">
+    <div class="msg assistant">
+      <div class="bubble">Hey! I'm your Alytics AI. Ask me anything about your traffic — I can run queries on your data and give you real insights.<br><br>Try: <em>"Why did traffic drop last week?"</em> or <em>"What's my best traffic source?"</em></div>
+    </div>
+  </div>
+
+  <div class="chat-hints" id="chatHints">
+    <div class="chat-hint">Top pages this week</div>
+    <div class="chat-hint">Best traffic source</div>
+    <div class="chat-hint">Mobile vs desktop split</div>
+    <div class="chat-hint">Traffic trend</div>
+  </div>
+
+  <div class="chat-input-area">
+    <textarea class="chat-input" id="chatInput" rows="1" placeholder="Ask anything about your traffic..."></textarea>
+    <button class="chat-send" id="chatSend">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<!-- ─── Add Site Modal ────────────────────────────────────── -->
+<div class="modal-backdrop hidden" id="addSiteModal">
+  <div class="modal">
+    <h2>Add a site</h2>
+    <p>Add your site to start tracking. Drop the snippet in your <code>&lt;head&gt;</code> and you're live.</p>
+    <div class="form-group">
+      <label>Site Name</label>
+      <input class="form-control" id="newSiteName" placeholder="My App" />
+    </div>
+    <div class="form-group">
+      <label>Domain</label>
+      <input class="form-control" id="newSiteDomain" placeholder="myapp.com" />
+    </div>
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button class="btn btn-primary" id="createSiteBtn" style="flex:1; padding:10px;">Create Site</button>
+      <button class="btn" id="cancelSiteBtn" style="padding:10px 20px;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Snippet Modal ─────────────────────────────────────── -->
+<div class="modal-backdrop hidden" id="snippetModal">
+  <div class="modal">
+    <h2>🎉 Site created!</h2>
+    <p>Paste this snippet inside <code>&lt;head&gt;</code> on every page you want to track:</p>
+    <div class="snippet-box" style="position:relative;">
+      <pre id="snippetCode" style="white-space:pre-wrap; font-size:12px;"></pre>
+      <button class="copy-btn" id="copySnippet">Copy</button>
+    </div>
+    <p style="font-size:12px; color:var(--muted); margin-top:8px;">SPA support and custom events (<code>alytics.track('event')</code>) are built in.</p>
+    <button class="btn btn-primary" id="closeSnippet" style="width:100%; margin-top:16px; padding:10px;">Go to Dashboard</button>
+  </div>
+</div>
+
+<!-- ─── Empty State ───────────────────────────────────────── -->
+<div class="modal-backdrop hidden" id="emptyState">
+  <div class="modal" style="text-align:center;">
+    <div style="font-size:48px; margin-bottom:16px;">📊</div>
+    <h2 style="margin-bottom:8px;">Welcome to Alytics</h2>
+    <p style="margin-bottom:24px;">Add your first site to start chatting with your traffic data.</p>
+    <button class="btn btn-primary" id="emptyAddSite" style="padding:12px 32px; font-size:15px;">Add Your First Site</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
