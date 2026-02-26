@@ -163,19 +163,25 @@ function renderOverview(d) {
 }
 
 function renderChart(rows) {
-  const labels = rows.map(r => r.date);
+  const labels = rows.map(r => {
+    // Format date nicely
+    const d = new Date(r.date);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  });
   const visitors = rows.map(r => r.visitors);
   const pageviews = rows.map(r => r.pageviews);
 
   const ctx = document.getElementById('trafficChart').getContext('2d');
 
-  const gradientVisitors = ctx.createLinearGradient(0, 0, 0, 300);
-  gradientVisitors.addColorStop(0, 'rgba(99,102,241,0.3)');
-  gradientVisitors.addColorStop(1, 'rgba(99,102,241,0)');
+  const gradientVisitors = ctx.createLinearGradient(0, 0, 0, 320);
+  gradientVisitors.addColorStop(0, 'rgba(99, 102, 241, 0.25)');
+  gradientVisitors.addColorStop(0.5, 'rgba(99, 102, 241, 0.08)');
+  gradientVisitors.addColorStop(1, 'rgba(99, 102, 241, 0)');
 
-  const gradientViews = ctx.createLinearGradient(0, 0, 0, 300);
-  gradientViews.addColorStop(0, 'rgba(34,211,238,0.2)');
-  gradientViews.addColorStop(1, 'rgba(34,211,238,0)');
+  const gradientViews = ctx.createLinearGradient(0, 0, 0, 320);
+  gradientViews.addColorStop(0, 'rgba(34, 211, 238, 0.15)');
+  gradientViews.addColorStop(0.5, 'rgba(34, 211, 238, 0.05)');
+  gradientViews.addColorStop(1, 'rgba(34, 211, 238, 0)');
 
   if (trafficChart) trafficChart.destroy();
 
@@ -187,12 +193,15 @@ function renderChart(rows) {
         {
           label: 'Visitors',
           data: visitors,
-          borderColor: '#6366f1',
+          borderColor: '#818cf8',
           backgroundColor: gradientVisitors,
-          borderWidth: 2,
-          pointRadius: rows.length > 30 ? 0 : 3,
-          pointHoverRadius: 5,
-          tension: 0.35,
+          borderWidth: 2.5,
+          pointRadius: rows.length > 14 ? 0 : 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#818cf8',
+          pointBorderColor: '#0a0a12',
+          pointBorderWidth: 2,
+          tension: 0.4,
           fill: true
         },
         {
@@ -201,35 +210,70 @@ function renderChart(rows) {
           borderColor: '#22d3ee',
           backgroundColor: gradientViews,
           borderWidth: 2,
-          pointRadius: rows.length > 30 ? 0 : 3,
-          pointHoverRadius: 5,
-          tension: 0.35,
+          pointRadius: rows.length > 14 ? 0 : 4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#22d3ee',
+          pointBorderColor: '#0a0a12',
+          pointBorderWidth: 2,
+          tension: 0.4,
           fill: true
         }
       ]
     },
     options: {
       responsive: true,
+      maintainAspectRatio: true,
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#12121e',
-          borderColor: '#1e1e35',
+          backgroundColor: 'rgba(20, 20, 42, 0.95)',
+          borderColor: 'rgba(38, 38, 74, 0.8)',
           borderWidth: 1,
           titleColor: '#94a3b8',
-          bodyColor: '#e2e8f0',
-          padding: 10
+          bodyColor: '#f1f5f9',
+          padding: 14,
+          cornerRadius: 10,
+          displayColors: true,
+          boxPadding: 6,
+          titleFont: { weight: '600', size: 12 },
+          bodyFont: { size: 13 },
+          callbacks: {
+            label: function(context) {
+              return ' ' + context.dataset.label + ': ' + context.parsed.y.toLocaleString();
+            }
+          }
         }
       },
       scales: {
         x: {
-          grid: { color: '#1e1e35' },
-          ticks: { color: '#64748b', maxRotation: 0 }
+          grid: { 
+            color: 'rgba(30, 30, 53, 0.5)',
+            drawBorder: false
+          },
+          ticks: { 
+            color: '#64748b', 
+            maxRotation: 0,
+            font: { size: 11, weight: '500' },
+            padding: 8
+          },
+          border: { display: false }
         },
         y: {
-          grid: { color: '#1e1e35' },
-          ticks: { color: '#64748b' },
+          grid: { 
+            color: 'rgba(30, 30, 53, 0.5)',
+            drawBorder: false
+          },
+          ticks: { 
+            color: '#64748b',
+            font: { size: 11, weight: '500' },
+            padding: 12,
+            callback: function(value) {
+              if (value >= 1000) return (value / 1000).toFixed(0) + 'K';
+              return value;
+            }
+          },
+          border: { display: false },
           beginAtZero: true
         }
       }
@@ -240,16 +284,16 @@ function renderChart(rows) {
 function renderTable(tableId, rows, cols) {
   const tbody = document.querySelector(`#${tableId} tbody`);
   if (!rows || !rows.length) {
-    tbody.innerHTML = '<tr><td colspan="3" class="empty" style="padding:20px;color:var(--muted);text-align:center;">No data yet</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3" style="padding:28px;color:var(--muted);text-align:center;font-size:13px;">No data yet</td></tr>';
     return;
   }
 
   const maxVal = Math.max(...rows.map(r => r[cols[1]]), 1);
-  tbody.innerHTML = rows.map(row => `
-    <tr class="bar-row">
+  tbody.innerHTML = rows.map((row, i) => `
+    <tr class="bar-row" style="animation: fadeInUp 0.3s ease ${0.05 * i}s backwards;">
       <td style="position:relative;">
         <div class="bar-bg" style="width:${(row[cols[1]] / maxVal * 100).toFixed(0)}%"></div>
-        <span class="path-cell" title="${row[cols[0]]}">${truncate(row[cols[0]])}</span>
+        <span class="path-cell" title="${row[cols[0]]}">${truncate(row[cols[0]], 40)}</span>
       </td>
       <td>${fmt(row[cols[1]])}</td>
       <td>${fmt(row[cols[2]])}</td>
@@ -271,9 +315,22 @@ function renderDevices(data) {
 }
 
 function renderBreakdown(panelId, items, ...colors) {
-  if (!items || !items.length) return;
+  if (!items || !items.length) {
+    document.getElementById(panelId).innerHTML = '<div class="empty" style="padding:20px;color:var(--muted);text-align:center;">No data yet</div>';
+    return;
+  }
   const total = items.reduce((s, i) => s + i.visitors, 0) || 1;
-  const palette = ['#6366f1', '#22d3ee', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
+  // Premium gradient palette
+  const palette = [
+    'linear-gradient(90deg, #818cf8, #6366f1)',
+    'linear-gradient(90deg, #22d3ee, #0891b2)',
+    'linear-gradient(90deg, #34d399, #10b981)',
+    'linear-gradient(90deg, #fbbf24, #f59e0b)',
+    'linear-gradient(90deg, #f87171, #ef4444)',
+    'linear-gradient(90deg, #a78bfa, #8b5cf6)',
+    'linear-gradient(90deg, #f472b6, #ec4899)',
+    'linear-gradient(90deg, #2dd4bf, #14b8a6)'
+  ];
 
   document.getElementById(panelId).innerHTML = items.map((item, i) => `
     <div class="device-row">
